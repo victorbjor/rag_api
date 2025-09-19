@@ -179,6 +179,7 @@ RAG_AZURE_OPENAI_API_VERSION = get_env_variable("RAG_AZURE_OPENAI_API_VERSION", 
 RAG_AZURE_OPENAI_API_KEY = get_env_variable(
     "RAG_AZURE_OPENAI_API_KEY", AZURE_OPENAI_API_KEY
 )
+RAG_AZURE_OPENAI_USE_ENTRA_ID = get_env_variable("RAG_AZURE_OPENAI_USE_ENTRA_ID", "false").lower() == "true"
 AZURE_OPENAI_ENDPOINT = get_env_variable("AZURE_OPENAI_ENDPOINT", "")
 RAG_AZURE_OPENAI_ENDPOINT = get_env_variable(
     "RAG_AZURE_OPENAI_ENDPOINT", AZURE_OPENAI_ENDPOINT
@@ -213,14 +214,26 @@ def init_embeddings(provider, model):
     elif provider == EmbeddingsProvider.AZURE:
         from langchain_openai import AzureOpenAIEmbeddings
 
-        return AzureOpenAIEmbeddings(
-            azure_deployment=model,
-            api_key=RAG_AZURE_OPENAI_API_KEY,
-            azure_endpoint=RAG_AZURE_OPENAI_ENDPOINT,
-            api_version=RAG_AZURE_OPENAI_API_VERSION,
-            chunk_size=EMBEDDINGS_CHUNK_SIZE,
-            check_embedding_ctx_length=RAG_CHECK_EMBEDDING_CTX_LENGTH,
-        )
+        if RAG_AZURE_OPENAI_USE_ENTRA_ID:
+            from azure.identity import DefaultAzureCredential
+
+            return AzureOpenAIEmbeddings(
+                azure_deployment=model,
+                azure_ad_token_provider=DefaultAzureCredential(),
+                azure_endpoint=RAG_AZURE_OPENAI_ENDPOINT,
+                api_version=RAG_AZURE_OPENAI_API_VERSION,
+                chunk_size=EMBEDDINGS_CHUNK_SIZE,
+                check_embedding_ctx_length=RAG_CHECK_EMBEDDING_CTX_LENGTH,
+            )
+        else:
+            return AzureOpenAIEmbeddings(
+                azure_deployment=model,
+                api_key=RAG_AZURE_OPENAI_API_KEY,
+                azure_endpoint=RAG_AZURE_OPENAI_ENDPOINT,
+                api_version=RAG_AZURE_OPENAI_API_VERSION,
+                chunk_size=EMBEDDINGS_CHUNK_SIZE,
+                check_embedding_ctx_length=RAG_CHECK_EMBEDDING_CTX_LENGTH,
+            )
     elif provider == EmbeddingsProvider.HUGGINGFACE:
         from langchain_huggingface import HuggingFaceEmbeddings
 
