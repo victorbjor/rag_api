@@ -219,7 +219,7 @@ def init_embeddings(provider, model):
 
             return AzureOpenAIEmbeddings(
                 azure_deployment=model,
-                azure_ad_token_provider=DefaultAzureCredential(),
+                azure_ad_token_provider=DefaultAzureCredential,
                 azure_endpoint=RAG_AZURE_OPENAI_ENDPOINT,
                 api_version=RAG_AZURE_OPENAI_API_VERSION,
                 chunk_size=EMBEDDINGS_CHUNK_SIZE,
