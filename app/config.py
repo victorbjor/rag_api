@@ -216,10 +216,16 @@ def init_embeddings(provider, model):
 
         if RAG_AZURE_OPENAI_USE_ENTRA_ID:
             from azure.identity import DefaultAzureCredential
-
+            credential = DefaultAzureCredential()
+            
+            # Create a token provider function that returns the token string
+            def get_token():
+                token = credential.get_token("https://cognitiveservices.azure.com/.default")
+                return token.token
+            
             return AzureOpenAIEmbeddings(
                 azure_deployment=model,
-                azure_ad_token_provider=DefaultAzureCredential,
+                azure_ad_token_provider=get_token,
                 azure_endpoint=RAG_AZURE_OPENAI_ENDPOINT,
                 api_version=RAG_AZURE_OPENAI_API_VERSION,
                 chunk_size=EMBEDDINGS_CHUNK_SIZE,
